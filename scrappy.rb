@@ -1,23 +1,23 @@
 require 'watir'
 require 'csv'
+require 'sqlite3'
+
+asin = ARGV[0]
+raise ArgumentError.new 'No ASIN provided' unless asin
 
 BASE_PRODUCT_URL = 'https://www.amazon.com/dp/'
-
 REVIEW_PARSERS = {
   author: ->(review) { review.span(class: 'a-profile-name').text },
   title: ->(review) { review.a(class: 'review-title').text },
   content: ->(review) { review.span(class: 'review-text').text },
   rating: ->(review) { review.i(class: 'review-rating').text_content.to_i }
 }
-
-asin = ARGV[0]
 product_url = BASE_PRODUCT_URL + asin
 timestamp = Time.now.strftime('%Y%m%d%H%M%S')
 csv_filename = "#{asin}-#{timestamp}.csv"
 
 puts 'Starting web browser...'
-browser = Watir::Browser.new :chrome
- 
+browser = Watir::Browser.new :chrome 
 puts 'Opening product page...'
 browser.goto product_url
 reviews_link = browser.a(data_hook: 'see-all-reviews-link-foot')
@@ -26,7 +26,6 @@ reviews_link.click
  
 puts 'Opening product reviews page...'
 reviews = []
-
 begin
   loop do
     browser.div(class: 'reviews-loading aok-hidden').wait_until(&:exists?)
